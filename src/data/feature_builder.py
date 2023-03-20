@@ -1,16 +1,16 @@
 import random
 from typing import Tuple
+
 import spacy
 import torch
 import torchvision
-from tqdm import tqdm
-from PIL import Image, ImageDraw
 import torchvision.transforms.functional as tvF
+from PIL import Image, ImageDraw
+from tqdm import tqdm
 
-from src.paths import CHECKPOINTS
+from src.data.utils import get_histogram, polar, to_bin
 from src.models.unet import Unet
-from src.data.utils import to_bin
-from src.data.utils import polar, get_histogram
+from src.paths import CHECKPOINTS
 from src.utils import get_config
 
 

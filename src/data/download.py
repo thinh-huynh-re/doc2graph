@@ -1,11 +1,12 @@
 import os
 import shutil
-import requests
 import zipfile
-import wget
-from src.utils import create_folder
 
-from src.paths import CHECKPOINTS, DATA
+import requests
+import wget
+
+from src.paths import DATA
+from src.utils import create_folder
 
 
 def download_url(url, save_path, chunk_size=128):

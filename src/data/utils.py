@@ -1,9 +1,10 @@
+import math
 from math import sqrt
 from typing import Tuple
+
 import cv2
 import numpy as np
 import torch
-import math
 
 
 def polar(rect_src: list, rect_dst: list) -> Tuple[int, int]:

@@ -1,10 +1,11 @@
+import os
 from random import randint
 from typing import Tuple
+
+import dgl
+import numpy as np
 import torch
 import torch.utils.data as data
-import os
-import numpy as np
-import dgl
 from PIL import Image, ImageDraw
 
 from src.data.feature_builder import FeatureBuilder

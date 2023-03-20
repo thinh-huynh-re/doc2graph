@@ -1,12 +1,13 @@
+import json
+import os
+
+import numpy as np
+import pytesseract
 import torch
 import torchvision
-import numpy as np
-from scipy.optimize import linprog
-import os
-from PIL import ImageDraw, Image
-import json
-import pytesseract
+from PIL import Image, ImageDraw
 from pytesseract import Output
+from scipy.optimize import linprog
 
 from src.paths import DATA, FUNSD_TEST
 

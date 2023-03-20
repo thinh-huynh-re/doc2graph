@@ -2,9 +2,15 @@ torch
 torchvision
 torchaudio
 black
-itsdangerous
 sklearn
 PyYAML
 python-dotenv
 attrdict
 segmentation-models-pytorch
+setuptools-git-versioning
+wget
+tensorboard
+spacy
+opencv-python
+opencv-python-headless
+pytesseract

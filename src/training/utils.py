@@ -1,15 +1,13 @@
 from argparse import ArgumentParser
 import os
 from typing import Tuple
-from itsdangerous import json
 import pandas as pd
-import sklearn
+import json
 from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     f1_score,
     precision_recall_fscore_support,
-    roc_auc_score,
     roc_curve,
 )
 from sklearn.utils import class_weight

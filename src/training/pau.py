@@ -1,24 +1,25 @@
+import time
+import xml.etree.ElementTree as ET
 from datetime import datetime
-from sklearn.model_selection import KFold, ShuffleSplit
-import torch
-from torch.nn import functional as F
 from random import seed
-from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
+from statistics import mean
+
 import dgl
+import numpy as np
+import torch
+from PIL import Image
+from sklearn.model_selection import KFold, ShuffleSplit
+from torch.nn import functional as F
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
-import time
-from statistics import mean
-import numpy as np
-import xml.etree.ElementTree as ET
-from PIL import Image
 
 from src.data.dataloader import Document2Graph
 from src.data.preprocessing import match_pred_w_gt
-from src.paths import *
 from src.models.graphs import SetModel
-from src.utils import get_config
+from src.paths import *
 from src.training.utils import *
+from src.utils import get_config
 
 
 def e2e(args):

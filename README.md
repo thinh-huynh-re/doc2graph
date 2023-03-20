@@ -6,6 +6,17 @@
 - Ubuntu 22.04
 - `./install.sh`
 - `pip install -r requirements.txt`
+- `pip install -e .`
+
+## Use
+
+### Initialization
+
+- Download datasets
+
+~~~python
+python src/main.py --init
+~~~
 
 ## Citation
 ```

@@ -11,7 +11,10 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": []
+            "args": [
+                "--add_geom",
+                "--add_embs"
+            ]
         }
     ]
 }

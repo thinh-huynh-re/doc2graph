@@ -15,7 +15,7 @@
 - Download datasets
 
 ~~~python
-python src/main.py --init
+python main.py --init
 ~~~
 
 ## Citation

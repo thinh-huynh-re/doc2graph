@@ -1,9 +1,12 @@
-from typing import List
-import torch
-import torch.nn as nn
-import dgl.function as fn
 import math
+from typing import Dict, List
+
+import dgl.function as fn
+import torch
 import torch.nn.functional as F
+from dgl.udf import EdgeBatch
+from dgl.heterograph import DGLGraph
+from torch import Tensor, nn
 
 from src.paths import CFGM
 from src.utils import get_config
@@ -399,7 +402,12 @@ class MLPPredictor(nn.Module):
 
 class MLPPredictor_E2E(nn.Module):
     def __init__(
-        self, in_features, hidden_dim, out_classes, dropout, edge_pred_features
+        self,
+        in_features: int,
+        hidden_dim: int,
+        out_classes: int,
+        dropout: float,
+        edge_pred_features: int,
     ):
         super().__init__()
         self.out = out_classes
@@ -408,7 +416,7 @@ class MLPPredictor_E2E(nn.Module):
         self.W2 = nn.Linear(hidden_dim, out_classes)
         self.drop = nn.Dropout(dropout)
 
-    def apply_edges(self, edges):
+    def apply_edges(self, edges: EdgeBatch) -> Dict[str, Tensor]:
         h_u = edges.src["h"]
         h_v = edges.dst["h"]
         cls_u = F.softmax(edges.src["cls"], dim=1)
@@ -422,7 +430,7 @@ class MLPPredictor_E2E(nn.Module):
 
         return {"score": score}
 
-    def forward(self, graph, h, cls):
+    def forward(self, graph: DGLGraph, h: Tensor, cls: Tensor):
         # h contains the node representations computed from the GNN defined
         # in the node classification section (Section 5.1).
         with graph.local_scope():

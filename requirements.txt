@@ -5,7 +5,6 @@ black
 sklearn
 PyYAML
 python-dotenv
-attrdict
 segmentation-models-pytorch
 setuptools-git-versioning
 wget

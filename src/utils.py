@@ -1,10 +1,19 @@
 import os
 from argparse import ArgumentParser
+from typing import Any, Dict
 
 import yaml
-from attrdict import AttrDict
 
 from src.paths import *
+
+
+class AttrDict:
+    def __init__(self, d: Dict[str, Any]):
+        for k, v in d.items():
+            if isinstance(k, (list, tuple)):
+                setattr(self, k, [AttrDict(x) if isinstance(x, dict) else x for x in v])
+            else:
+                setattr(self, k, AttrDict(v) if isinstance(v, dict) else v)
 
 
 def create_folder(folder_path: str) -> None:

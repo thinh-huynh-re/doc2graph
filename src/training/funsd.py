@@ -1,26 +1,23 @@
-from datetime import datetime
-from sklearn.model_selection import KFold, ShuffleSplit
-import torch
-from torch.nn import functional as F
-from random import shuffle, seed
-from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
-import dgl
-from torch.utils.tensorboard import SummaryWriter
-from torchvision import transforms
 import time
+from datetime import datetime
+from random import seed
 from statistics import mean
+
+import dgl
 import numpy as np
-from PIL import Image
+import torch
+from sklearn.model_selection import KFold
+from torch.nn import functional as F
 
+from src.argparser import MainArgumentParser
 from src.data.dataloader import Document2Graph
-from src.paths import *
 from src.models.graphs import SetModel
-from src.utils import get_config
+from src.paths import *
 from src.training.utils import *
-from src.data.graph_builder import GraphBuilder
+from src.utils import get_config
 
 
-def e2e(args):
+def e2e(args: MainArgumentParser):
     # configs
     start_training = time.time()
     cfg_train = get_config("train")
@@ -564,7 +561,7 @@ def entity_linking(args):
     }
 
 
-def train_funsd(args):
+def train_funsd(args: MainArgumentParser):
     if args.model == "e2e":
         e2e(args)
     elif args.model == "edge":

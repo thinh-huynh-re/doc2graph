@@ -4,7 +4,6 @@
 *.py[cod]
 *.eggs
 build
-.vscode
 cc.*
 *.DS_Store
 

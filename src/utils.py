@@ -1,7 +1,8 @@
-from argparse import ArgumentParser
 import os
-from attrdict import AttrDict
+from argparse import ArgumentParser
+
 import yaml
+from attrdict import AttrDict
 
 from src.paths import *
 

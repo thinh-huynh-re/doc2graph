@@ -1,3 +1,4 @@
+from typing import List
 import torch
 import torch.nn as nn
 import dgl.function as fn
@@ -106,12 +107,12 @@ class SetModel:
 class NodeClassifier(nn.Module):
     def __init__(
         self,
-        in_chunks,
-        out_chunks,
-        n_classes,
-        n_layers,
-        activation,
-        dropout=0,
+        in_chunks: int,
+        out_chunks: int,
+        n_classes: int,
+        n_layers: int,
+        activation: nn.Module,
+        dropout: float = 0.0,
         use_pp=False,
         device="cuda:0",
     ):
@@ -125,7 +126,7 @@ class NodeClassifier(nn.Module):
         n_hidden = self.projector.get_out_lenght()
 
         # mp layers
-        for i in range(0, n_layers - 1):
+        for _ in range(0, n_layers - 1):
             self.layers.append(
                 GcnSAGELayer(
                     n_hidden,
@@ -206,15 +207,15 @@ class EdgeClassifier(nn.Module):
 class E2E(nn.Module):
     def __init__(
         self,
-        node_classes,
-        edge_classes,
-        m_layers,
-        dropout,
-        in_chunks,
-        out_chunks,
-        hidden_dim,
-        device,
-        edge_pred_features,
+        node_classes: int,
+        edge_classes: int,
+        m_layers: int,
+        dropout: float,
+        in_chunks: List[int],
+        out_chunks: int,
+        hidden_dim: int,
+        device: str,
+        edge_pred_features: int,
         doProject=True,
     ):
         super().__init__()
@@ -259,10 +260,10 @@ class E2E(nn.Module):
 class GcnSAGELayer(nn.Module):
     def __init__(
         self,
-        in_feats,
-        out_feats,
-        activation,
-        dropout,
+        in_feats: int,
+        out_feats: int,
+        activation: nn.Module,
+        dropout: float,
         bias=True,
         use_pp=False,
         use_lynorm=True,
@@ -320,7 +321,9 @@ class GcnSAGELayer(nn.Module):
 
 
 class InputProjector(nn.Module):
-    def __init__(self, in_chunks: list, out_chunks: int, device, doIt=True) -> None:
+    def __init__(
+        self, in_chunks: List[int], out_chunks: int, device, doIt=True
+    ) -> None:
         super().__init__()
 
         if not doIt:

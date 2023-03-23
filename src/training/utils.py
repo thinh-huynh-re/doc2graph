@@ -254,9 +254,10 @@ def compute_crossentropy_loss(scores: Tensor, labels: Tensor) -> Tensor:
 
 def compute_auc_mc(scores: Tensor, labels: Tensor):
     scores_np: np.array = scores.detach().cpu().numpy()
-    labels_np: np.array = F.one_hot(labels).cpu().numpy()
+    labels = F.one_hot(labels)
+    labels_np: np.array = labels.cpu().numpy()
     # return roc_auc_score(labels, scores)
-    return average_precision_score(scores_np, labels_np)
+    return average_precision_score(labels_np, scores_np)
 
 
 def find_optimal_cutoff(target, predicted):

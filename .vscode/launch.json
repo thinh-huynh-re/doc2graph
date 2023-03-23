@@ -16,7 +16,9 @@
                 "--add_embs",
                 // "--add_visual",
                 "--add_hist",
-                "--add_eweights"
+                "--add_eweights",
+                "--gpu",
+                "0"
             ]
         }
     ]

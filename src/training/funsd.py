@@ -7,12 +7,12 @@ import dgl
 import numpy as np
 import torch
 from sklearn.model_selection import KFold
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import functional as F
 
 from src.argparser import MainArgumentParser
 from src.data.dataloader import Document2Graph
-from src.models.graphs import SetModel
+from src.models.graphs import E2E, SetModel
 from src.paths import PATH
 from src.training.utils import (
     EarlyStopping,
@@ -64,7 +64,7 @@ def e2e(args: MainArgumentParser):
             vg = vg.int().to(device)
 
             ################* STEP 1: CREATE MODEL ################
-            model: nn.Module = sm.get_model(
+            model: E2E = sm.get_model(
                 data.node_num_classes, data.edge_num_classes, data.get_chunks()
             )
             optimizer = torch.optim.AdamW(
@@ -85,24 +85,28 @@ def e2e(args: MainArgumentParser):
 
             ################* STEP 2: TRAINING ################
             print("\n### TRAINING ###")
-            print(f"-> Training samples: {tg.batch_size}")
-            print(f"-> Validation samples: {vg.batch_size}\n")
+            print(f"-> Training batch size: {tg.batch_size}")
+            print(f"-> Validation batch size: {vg.batch_size}\n")
 
             # im_step = 0
             for epoch in range(cfg_train.epochs):
                 # * TRAINING
                 model.train()
 
-                n_scores, e_scores = model(tg, tg.ndata["feat"].to(device))
-                n_loss = compute_crossentropy_loss(
-                    n_scores.to(device), tg.ndata["label"].to(device)
-                )
-                e_loss = compute_crossentropy_loss(
-                    e_scores.to(device), tg.edata["label"].to(device)
-                )
+                node_feats: Tensor = tg.ndata["feat"]
+                node_labels: Tensor = tg.ndata["label"]
+                edge_labels: Tensor = tg.edata["label"]
+
+                node_feats = node_feats.to(device)
+                node_labels = node_labels.to(device)
+                edge_labels = edge_labels.to(device)
+
+                n_scores, e_scores = model.forward(tg, node_feats)
+                n_loss = compute_crossentropy_loss(n_scores, node_labels)
+                e_loss = compute_crossentropy_loss(e_scores, edge_labels)
                 tot_loss = n_loss + e_loss
-                macro, micro = get_f1(n_scores, tg.ndata["label"].to(device))
-                auc = compute_auc_mc(e_scores.to(device), tg.edata["label"].to(device))
+                macro, micro = get_f1(n_scores, node_labels)
+                auc = compute_auc_mc(e_scores, edge_labels)
 
                 optimizer.zero_grad()
                 tot_loss.backward()
@@ -112,18 +116,20 @@ def e2e(args: MainArgumentParser):
                 # * VALIDATION
                 model.eval()
                 with torch.no_grad():
-                    val_n_scores, val_e_scores = model(vg, vg.ndata["feat"].to(device))
-                    val_n_loss = compute_crossentropy_loss(
-                        val_n_scores.to(device), vg.ndata["label"].to(device)
-                    )
-                    val_e_loss = compute_crossentropy_loss(
-                        val_e_scores.to(device), vg.edata["label"].to(device)
-                    )
+                    node_feats: Tensor = vg.ndata["feat"]
+                    node_labels: Tensor = vg.ndata["label"]
+                    edge_labels: Tensor = vg.edata["label"]
+
+                    node_feats = node_feats.to(device)
+                    node_labels = node_labels.to(device)
+                    edge_labels = edge_labels.to(device)
+
+                    val_n_scores, val_e_scores = model.forward(vg, node_feats)
+                    val_n_loss = compute_crossentropy_loss(val_n_scores, node_labels)
+                    val_e_loss = compute_crossentropy_loss(val_e_scores, edge_labels)
                     val_tot_loss = val_n_loss + val_e_loss
-                    val_macro, _ = get_f1(val_n_scores, vg.ndata["label"].to(device))
-                    val_auc = compute_auc_mc(
-                        val_e_scores.to(device), vg.edata["label"].to(device)
-                    )
+                    val_macro, _ = get_f1(val_n_scores, node_labels)
+                    val_auc = compute_auc_mc(val_e_scores, edge_labels)
 
                 # scheduler.step(val_auc)
                 # scheduler.step()

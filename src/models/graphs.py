@@ -1,5 +1,5 @@
 import math
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import dgl.function as fn
 import torch
@@ -245,13 +245,13 @@ class E2E(nn.Module):
         node_pred.append(nn.LayerNorm(node_classes))
         self.node_pred = nn.Sequential(*node_pred)
 
-    def forward(self, g, h):
-        h = self.projector(h)
+    def forward(self, g: DGLGraph, h: Tensor) -> Tuple[Tensor, Tensor]:
+        h: Tensor = self.projector(h)
         # for l in range(self.m_layers):
         #     h = self.message_passing[l](g, h)
-        h = self.message_passing(g, h)
-        n = self.node_pred(h)
-        e = self.edge_pred(g, h, n)
+        h: Tensor = self.message_passing(g, h)
+        n: Tensor = self.node_pred(h)
+        e: Tensor = self.edge_pred(g, h, n)
 
         return n, e
 

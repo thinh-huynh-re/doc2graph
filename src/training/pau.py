@@ -8,11 +8,8 @@ import dgl
 import numpy as np
 import torch
 from PIL import Image
-from sklearn.model_selection import KFold, ShuffleSplit
+from sklearn.model_selection import KFold
 from torch.nn import functional as F
-from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
-from torch.utils.tensorboard import SummaryWriter
-from torchvision import transforms
 
 from src.data.dataloader import Document2Graph
 from src.data.preprocessing import match_pred_w_gt

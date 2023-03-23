@@ -4,11 +4,11 @@ from typing import Dict, List
 import dgl.function as fn
 import torch
 import torch.nn.functional as F
-from dgl.udf import EdgeBatch
 from dgl.heterograph import DGLGraph
+from dgl.udf import EdgeBatch
 from torch import Tensor, nn
 
-from src.paths import CFGM
+from src.paths import PATH
 from src.utils import get_config
 
 
@@ -23,7 +23,7 @@ class SetModel:
             SetModel object.
         """
 
-        self.cfg_model = get_config(CFGM / name)
+        self.cfg_model = get_config(PATH.CFGM / name)
         self.name = self.cfg_model.name
         self.total_params = 0
         self.device = device

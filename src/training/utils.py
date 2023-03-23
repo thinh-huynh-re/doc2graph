@@ -1,8 +1,15 @@
-from argparse import ArgumentParser
-import os
-from typing import Tuple
-import pandas as pd
 import json
+import os
+import shutil
+from argparse import ArgumentParser
+from datetime import datetime
+from typing import Tuple
+
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn.functional as F
+import yaml
 from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
@@ -11,16 +18,9 @@ from sklearn.metrics import (
     roc_curve,
 )
 from sklearn.utils import class_weight
-import torch
-import torch.nn
-import torch.nn.functional as F
-import dgl
-from datetime import datetime
-import shutil
-import yaml
-import numpy as np
+from torch import Tensor, nn
 
-from src.paths import CHECKPOINTS, CONFIGS, OUTPUTS, RESULTS
+from src.paths import PATH
 
 
 class EarlyStopping:
@@ -103,7 +103,7 @@ class EarlyStopping:
 
     def save_checkpoint(self) -> None:
         """Saves model when validation acc increase."""
-        torch.save(self.model.state_dict(), CHECKPOINTS / f"{self.name}.pt")
+        torch.save(self.model.state_dict(), PATH.CHECKPOINTS / f"{self.name}.pt")
 
 
 def save_best_results(best_params: dict, rm_logs: bool = False) -> None:
@@ -113,12 +113,12 @@ def save_best_results(best_params: dict, rm_logs: bool = False) -> None:
         best_params (dict): best parameters among k-fold cross validation.
         rm_logs (bool, optional): Remove tmp weights in output folder if True. Defaults to False.
     """
-    models = OUTPUTS / "tmp"
-    output = CHECKPOINTS / best_params["model"]
+    models = PATH.OUTPUTS / "tmp"
+    output = PATH.CHECKPOINTS / best_params["model"]
     shutil.copyfile(models / best_params["model"], output)
 
-    new_configs = CONFIGS / (best_params["model"].split(".")[0] + ".yaml")
-    shutil.copyfile(CONFIGS / "base.yaml", new_configs)
+    new_configs = PATH.CONFIGS / (best_params["model"].split(".")[0] + ".yaml")
+    shutil.copyfile(PATH.CONFIGS / "base.yaml", new_configs)
 
     with open(new_configs) as f:
         config = yaml.safe_load(f)
@@ -147,19 +147,19 @@ def save_test_results(filename: str, infos: dict) -> None:
         filename (str): name of the file to save results of experiments
         infos (dict): what to save in the json file about training
     """
-    results = RESULTS / (filename + ".json")
+    results = PATH.RESULTS / (filename + ".json")
 
     with open(results, "w") as f:
         json.dump(infos, f)
     return
 
 
-def get_f1(logits: torch.Tensor, labels: torch.Tensor, per_class=False) -> tuple:
+def get_f1(logits: Tensor, labels: Tensor, per_class=False) -> tuple:
     """Returns Macro and Micro F1-score for given logits / labels.
 
     Args:
-        logits (torch.Tensor): model prediction logits
-        labels (torch.Tensor): target labels
+        logits (Tensor): model prediction logits
+        labels (Tensor): target labels
 
     Returns:
         tuple: macro-f1 and micro-f1
@@ -178,7 +178,7 @@ def get_f1(logits: torch.Tensor, labels: torch.Tensor, per_class=False) -> tuple
 
 
 def get_binary_accuracy_and_f1(
-    classes, labels: torch.Tensor, per_class=False
+    classes, labels: Tensor, per_class=False
 ) -> Tuple[float, list]:
     correct = torch.sum(classes.flatten() == labels)
     accuracy = correct.item() * 1.0 / len(labels)
@@ -195,12 +195,12 @@ def get_binary_accuracy_and_f1(
     return accuracy, f1
 
 
-def accuracy(logits: torch.Tensor, labels: torch.Tensor) -> float:
+def accuracy(logits: Tensor, labels: Tensor) -> float:
     """Accuracy of the model.
 
     Args:
-        logits (torch.Tensor): model prediction logits
-        labels (torch.Tensor): target labels
+        logits (Tensor): model prediction logits
+        labels (Tensor): target labels
 
     Returns:
         float: accuracy
@@ -241,22 +241,22 @@ def get_features(args: ArgumentParser) -> Tuple[str, str]:
     return feat_n, feat_e
 
 
-def compute_crossentropy_loss(scores: torch.Tensor, labels: torch.Tensor):
+def compute_crossentropy_loss(scores: Tensor, labels: Tensor) -> Tensor:
     w = class_weight.compute_class_weight(
         class_weight="balanced",
         classes=np.unique(labels.cpu().numpy()),
         y=labels.cpu().numpy(),
     )
-    return torch.nn.CrossEntropyLoss(
-        weight=torch.tensor(w, dtype=torch.float32).to("cuda:0")
+    return nn.CrossEntropyLoss(
+        weight=torch.tensor(w, dtype=torch.float32).to(scores.device)
     )(scores, labels)
 
 
-def compute_auc_mc(scores, labels):
-    scores = scores.detach().cpu().numpy()
-    labels = F.one_hot(labels).cpu().numpy()
+def compute_auc_mc(scores: Tensor, labels: Tensor):
+    scores_np: np.array = scores.detach().cpu().numpy()
+    labels_np: np.array = F.one_hot(labels).cpu().numpy()
     # return roc_auc_score(labels, scores)
-    return average_precision_score(labels, scores)
+    return average_precision_score(scores_np, labels_np)
 
 
 def find_optimal_cutoff(target, predicted):

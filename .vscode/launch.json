@@ -13,7 +13,10 @@
             "justMyCode": true,
             "args": [
                 "--add_geom",
-                "--add_embs"
+                "--add_embs",
+                // "--add_visual",
+                "--add_hist",
+                "--add_eweights"
             ]
         }
     ]

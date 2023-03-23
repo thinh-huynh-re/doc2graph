@@ -12,7 +12,6 @@ from tqdm import tqdm
 
 from src.data.preprocessing import load_predictions
 from src.data.utils import polar
-from src.paths import DATA, FUNSD_TEST
 from src.utils import get_config
 
 

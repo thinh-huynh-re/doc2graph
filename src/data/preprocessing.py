@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 from pytesseract import Output
 from scipy.optimize import linprog
 
-from src.paths import DATA, FUNSD_TEST
+from src.paths import PATH
 
 
 def scale_back(r, w, h):
@@ -276,7 +276,7 @@ def save_results():
 
 
 if __name__ == "__main__":
-    path_preds = DATA / "FUNSD" / "test_bbox"
-    path_images = FUNSD_TEST / "images"
-    path_gts = FUNSD_TEST / "adjusted_annotations"
+    path_preds = PATH.DATA / "FUNSD" / "test_bbox"
+    path_images = PATH.FUNSD_TEST / "images"
+    path_gts = PATH.FUNSD_TEST / "adjusted_annotations"
     load_predictions(path_preds, path_gts, path_images, debug=True)

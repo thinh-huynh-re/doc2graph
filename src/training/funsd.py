@@ -7,20 +7,30 @@ import dgl
 import numpy as np
 import torch
 from sklearn.model_selection import KFold
+from torch import nn
 from torch.nn import functional as F
 
 from src.argparser import MainArgumentParser
 from src.data.dataloader import Document2Graph
 from src.models.graphs import SetModel
-from src.paths import *
-from src.training.utils import *
-from src.utils import get_config
+from src.paths import PATH
+from src.training.utils import (
+    EarlyStopping,
+    compute_auc_mc,
+    compute_crossentropy_loss,
+    get_binary_accuracy_and_f1,
+    get_device,
+    get_f1,
+    get_features,
+    save_test_results,
+)
+from src.utils import get_config, get_train_config
 
 
 def e2e(args: MainArgumentParser):
     # configs
     start_training = time.time()
-    cfg_train = get_config("train")
+    cfg_train = get_train_config("train")
     seed(cfg_train.seed)
     device = get_device(args.gpu)
     sm = SetModel(name=args.model, device=device)
@@ -29,9 +39,9 @@ def e2e(args: MainArgumentParser):
         ################* STEP 0: LOAD DATA ################
         data = Document2Graph(
             name="FUNSD TRAIN",
-            src_path=FUNSD_TRAIN,
+            src_path=PATH.FUNSD_TRAIN,
             device=device,
-            output_dir=TRAIN_SAMPLES,
+            output_dir=PATH.TRAIN_SAMPLES,
         )
         data.get_info()
 
@@ -54,7 +64,7 @@ def e2e(args: MainArgumentParser):
             vg = vg.int().to(device)
 
             ################* STEP 1: CREATE MODEL ################
-            model = sm.get_model(
+            model: nn.Module = sm.get_model(
                 data.node_num_classes, data.edge_num_classes, data.get_chunks()
             )
             optimizer = torch.optim.AdamW(
@@ -194,7 +204,10 @@ def e2e(args: MainArgumentParser):
 
     # ? test
     test_data = Document2Graph(
-        name="FUNSD TEST", src_path=FUNSD_TEST, device=device, output_dir=TEST_SAMPLES
+        name="FUNSD TEST",
+        src_path=PATH.FUNSD_TEST,
+        device=device,
+        output_dir=PATH.TEST_SAMPLES,
     )
     test_data.get_info()
 
@@ -207,7 +220,7 @@ def e2e(args: MainArgumentParser):
     test_graph = dgl.batch(test_data.graphs).to(device)
 
     for m in models:
-        model.load_state_dict(torch.load(CHECKPOINTS / m))
+        model.load_state_dict(torch.load(PATH.CHECKPOINTS / m))
         model.eval()
         with torch.no_grad():
             n, e = model(test_graph, test_graph.ndata["feat"].to(device))
@@ -235,7 +248,7 @@ def e2e(args: MainArgumentParser):
         print("F1 Nodes: Macro {:.4f} - Micro {:.4f}".format(macro, micro))
 
     print(f"\n -> Loading best model {best_model}")
-    model.load_state_dict(torch.load(CHECKPOINTS / best_model))
+    model.load_state_dict(torch.load(PATH.CHECKPOINTS / best_model))
     model.eval()
     with torch.no_grad():
         n, e = model(test_graph, test_graph.ndata["feat"].to(device))
@@ -273,7 +286,7 @@ def e2e(args: MainArgumentParser):
     if not args.test:
         feat_n, feat_e = get_features(args)
         # ? if skipping training, no need to save anything
-        model = get_config(CFGM / args.model)
+        model = get_config(PATH.CFGM / args.model)
         results = {
             "MODEL": {
                 "name": sm.get_name(),
@@ -320,9 +333,9 @@ def entity_linking(args):
         ################* STEP 0: LOAD DATA ################
         data = Document2Graph(
             name="FUNSD TRAIN",
-            src_path=FUNSD_TRAIN,
+            src_path=PATH.FUNSD_TRAIN,
             device=device,
-            output_dir=TRAIN_SAMPLES,
+            output_dir=PATH.TRAIN_SAMPLES,
         )
         data.get_info()
 
@@ -466,7 +479,10 @@ def entity_linking(args):
 
     # ? test
     test_data = Document2Graph(
-        name="FUNSD TEST", src_path=FUNSD_TEST, device=device, output_dir=TEST_SAMPLES
+        name="FUNSD TEST",
+        src_path=PATH.FUNSD_TEST,
+        device=device,
+        output_dir=PATH.TEST_SAMPLES,
     )
     test_data.get_info()
     model = sm.get_model(None, 2, test_data.get_chunks())
@@ -475,7 +491,7 @@ def entity_linking(args):
     test_graph = dgl.batch(test_data.graphs).to(device)
 
     for m in models:
-        model.load_state_dict(torch.load(CHECKPOINTS / m))
+        model.load_state_dict(torch.load(PATH.CHECKPOINTS / m))
         model.eval()
         with torch.no_grad():
             scores = model(test_graph, test_graph.ndata["feat"].to(device))
@@ -504,7 +520,7 @@ def entity_linking(args):
         )
 
     print(f"\nLoading best model {best_model}")
-    model.load_state_dict(torch.load(CHECKPOINTS / best_model))
+    model.load_state_dict(torch.load(PATH.CHECKPOINTS / best_model))
     model.eval()
     with torch.no_grad():
         scores = model(test_graph, test_graph.ndata["feat"].to(device))
@@ -521,7 +537,7 @@ def entity_linking(args):
     if not args.test:
         feat_n, feat_e = get_features(args)
         # ? if skipping training, no need to save anything
-        model = get_config(CFGM / args.model)
+        model = get_config(PATH.CFGM / args.model)
         results = {
             "MODEL": {
                 "name": sm.get_name(),

@@ -1,10 +1,10 @@
 import os
 from argparse import ArgumentParser
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import yaml
 
-from src.paths import *
+from src.paths import PATH
 
 
 class AttrDict:
@@ -14,6 +14,19 @@ class AttrDict:
                 setattr(self, k, [AttrDict(x) if isinstance(x, dict) else x for x in v])
             else:
                 setattr(self, k, AttrDict(v) if isinstance(v, dict) else v)
+
+
+class TrainConfig(AttrDict):
+    def __init__(self, d: Dict[str, Any]):
+        self.batch_size: int = d.get("batch_size", 15)
+        self.epochs: int = d.get("epochs", 100000)
+        self.lr: float = d.get("lr", 1e-3)
+        self.weight_decay: float = d.get("weight_decay", 1e-4)
+        self.val_size: float = d.get("val_size", 0.1)
+        self.optimizer: str = d.get("optimizer", "Adam")
+        self.scheduler: List[str] = d.get("scheduler", ["ReduceLROnPlateau"])
+        self.stopper_metric: str = d.get("stopper_metric", "acc")
+        self.seed: int = d.get("seed", 42)
 
 
 def create_folder(folder_path: str) -> None:
@@ -28,7 +41,13 @@ def create_folder(folder_path: str) -> None:
     return
 
 
-def get_config(name: str) -> AttrDict:
+def get_train_config(filename: str) -> TrainConfig:
+    with open(PATH.CONFIGS / f"{filename}.yaml") as fileobj:
+        config = TrainConfig(yaml.safe_load(fileobj))
+    return config
+
+
+def get_config(filename: str) -> AttrDict:
     """get yaml config file
 
     Args:
@@ -37,20 +56,20 @@ def get_config(name: str) -> AttrDict:
     Returns:
         AttrDict: config
     """
-    with open(CONFIGS / f"{name}.yaml") as fileobj:
+    with open(PATH.CONFIGS / f"{filename}.yaml") as fileobj:
         config = AttrDict(yaml.safe_load(fileobj))
     return config
 
 
 def project_tree() -> None:
     """Create the project tree folder"""
-    create_folder(DATA)
-    create_folder(OUTPUTS)
-    create_folder(RUNS)
-    create_folder(RESULTS)
-    create_folder(TRAIN_SAMPLES)
-    create_folder(TEST_SAMPLES)
-    create_folder(CHECKPOINTS)
+    create_folder(PATH.DATA)
+    create_folder(PATH.OUTPUTS)
+    create_folder(PATH.RUNS)
+    create_folder(PATH.RESULTS)
+    create_folder(PATH.TRAIN_SAMPLES)
+    create_folder(PATH.TEST_SAMPLES)
+    create_folder(PATH.CHECKPOINTS)
     return
 
 
@@ -60,7 +79,7 @@ def set_preprocessing(args: ArgumentParser) -> None:
     Args:
         args (ArgumentParser):
     """
-    with open(CONFIGS / "base.yaml") as fileobj:
+    with open(PATH.CONFIGS / "base.yaml") as fileobj:
         cfg_preprocessing = dict(yaml.safe_load(fileobj))
     cfg_preprocessing["FEATURES"]["add_geom"] = args.add_geom
     cfg_preprocessing["FEATURES"]["add_embs"] = args.add_embs
@@ -73,6 +92,6 @@ def set_preprocessing(args: ArgumentParser) -> None:
     cfg_preprocessing["GRAPHS"]["edge_type"] = args.edge_type
     cfg_preprocessing["GRAPHS"]["node_granularity"] = args.node_granularity
 
-    with open(CONFIGS / "preprocessing.yaml", "w") as f:
+    with open(PATH.CONFIGS / "preprocessing.yaml", "w") as f:
         yaml.dump(cfg_preprocessing, f)
     return

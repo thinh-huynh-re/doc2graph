@@ -5,8 +5,10 @@ import zipfile
 import requests
 import wget
 
-from src.paths import DATA
+from src.paths import PATH
 from src.utils import create_folder
+
+DATA = PATH.DATA
 
 
 def download_url(url: str, save_path: str, chunk_size: int = 128):

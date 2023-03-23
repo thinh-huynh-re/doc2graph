@@ -10,8 +10,10 @@ from tqdm import tqdm
 
 from src.data.utils import get_histogram, polar, to_bin
 from src.models.unet import Unet
-from src.paths import CHECKPOINTS
+from src.paths import PATH
 from src.utils import get_config
+
+CHECKPOINTS = PATH.CHECKPOINTS
 
 
 class FeatureBuilder:

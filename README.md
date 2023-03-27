@@ -2,7 +2,7 @@
 
 ## Installation
 
-- Python3.10 (venv)
+- Python 3.10.10 (venv)
 - Ubuntu 22.04
 - `./install.sh`
 - `pip install -r requirements.txt`
